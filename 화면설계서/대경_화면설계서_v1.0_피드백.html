@@ -1,0 +1,373 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<title>대경 화면설계서 v1.0 피드백</title>
+<style>
+  @page { size: A4; margin: 16mm 14mm 16mm 14mm; }
+  :root {
+    --ink: #1d2433; --muted: #5b6475; --line: #d9dde5; --soft: #f4f6f9;
+    --high: #c0392b; --high-bg: #fdecea; --mid: #b9770e; --mid-bg: #fef5e7; --low: #2e7d4f; --low-bg: #eaf6ef;
+    --accent: #2f4a7a;
+  }
+  * { box-sizing: border-box; }
+  body { font-family: "Malgun Gothic", "맑은 고딕", sans-serif; color: var(--ink); font-size: 10pt; line-height: 1.6; margin: 0; background: #fff; }
+  h1 { font-size: 22pt; margin: 0 0 6px; color: var(--accent); }
+  h2 { font-size: 15pt; color: var(--accent); border-bottom: 2px solid var(--accent); padding-bottom: 4px; margin: 0 0 12px; }
+  h3 { font-size: 12pt; margin: 16px 0 6px; }
+  h4 { font-size: 10.5pt; margin: 12px 0 4px; color: var(--accent); }
+  p { margin: 4px 0; }
+  ul { margin: 4px 0 4px 18px; padding: 0; }
+  li { margin: 2px 0; }
+  code { font-family: Consolas, monospace; font-size: 9pt; background: var(--soft); padding: 0 3px; border-radius: 3px; }
+  .page { page-break-after: always; }
+  .page:last-child { page-break-after: auto; }
+  .cover { padding-top: 60mm; }
+  .cover .sub { color: var(--muted); font-size: 11pt; }
+  .meta { margin-top: 30px; border-collapse: collapse; }
+  .meta td { border: 1px solid var(--line); padding: 5px 12px; }
+  .meta td:first-child { background: var(--soft); font-weight: bold; width: 110px; }
+  table.grid { width: 100%; border-collapse: collapse; margin: 6px 0 10px; font-size: 9pt; }
+  table.grid th, table.grid td { border: 1px solid var(--line); padding: 4px 6px; vertical-align: top; text-align: left; }
+  table.grid th { background: var(--soft); }
+  .tag { display: inline-block; font-size: 8pt; font-weight: bold; padding: 0 6px; border-radius: 8px; white-space: nowrap; }
+  .h { color: var(--high); background: var(--high-bg); }
+  .m { color: var(--mid); background: var(--mid-bg); }
+  .l { color: var(--low); background: var(--low-bg); }
+  .shots { display: flex; gap: 8px; margin: 6px 0 8px; }
+  .shots figure { margin: 0; flex: 1; border: 1px solid var(--line); }
+  .shots img { width: 100%; display: block; }
+  .shots figcaption { font-size: 8pt; color: var(--muted); padding: 2px 6px; background: var(--soft); }
+  .box { border: 1px solid var(--line); border-radius: 4px; padding: 6px 10px; margin: 6px 0; break-inside: avoid; }
+  .box h4 { margin-top: 2px; }
+  .fix { background: var(--soft); border-left: 3px solid var(--accent); padding: 6px 10px; margin: 8px 0; break-inside: avoid; }
+  .note { color: var(--muted); font-size: 9pt; }
+</style>
+</head>
+<body>
+
+<!-- 표지 -->
+<section class="page cover">
+  <h1>대경 화면설계서 v1.0 검토 피드백</h1>
+  <p class="sub">개발자가 그대로 구현할 수 있는지를 기준으로, 각 화면 이미지와 설명을 대조해 검토했습니다.</p>
+  <table class="meta">
+    <tr><td>검토 대상</td><td>대경_화면설계서_v1.0.pptx (19장)</td></tr>
+    <tr><td>검토 범위</td><td>표지 3장, 화면 7개 (TD3-001, 002, 005, 006, 009, 010, 011)</td></tr>
+    <tr><td>검토일</td><td>2026-10-23</td></tr>
+    <tr><td>심각도 표기</td><td><span class="tag h">높음</span> 개발 오류·재작업 유발 &nbsp; <span class="tag m">중간</span> 개발자 문의 필요 &nbsp; <span class="tag l">낮음</span> 표기·완성도</td></tr>
+  </table>
+</section>
+
+<!-- 1. 총평 -->
+<section class="page">
+  <h2>1. 총평</h2>
+  <p>화면 구성과 번호(❶❷❸) 체계, 업무·화면·기능·조회 조건으로 나눈 설명 틀은 일관되게 잡혀 있습니다. 다만 개발자가 이 문서만 보고 구현하기에는 아래 세 가지 문제가 큽니다.</p>
+  <ul>
+    <li><b>다른 프로젝트(매입 견적 산출) 문구가 그대로 남아 있습니다.</b> 화면 4개(슬라이드 7–8, 12–14, 15–17, 18–19)에 영업이익·재고비용·품목·상태·등급·BASE_MONTH·MSE 같은 이 시스템과 무관한 내용이 들어 있어, 개발자가 그대로 구현하면 잘못된 기능이 만들어집니다.</li>
+    <li><b>불량 클래스 정의가 화면마다 다릅니다.</b> 설명에는 <code>stick_offset</code>, <code>thread_defection</code> 등으로 정의했지만 화면 예시에는 <code>broken_thread</code>, <code>bond_leak</code>, <code>broken_bar</code>가 나오고, 다른 화면은 한글명(엮음실 불량, 풀림)을 씁니다. 코드·한글명·클래스 번호를 연결하는 기준표가 없습니다.</li>
+    <li><b>YOLO 객체 검출에 맞지 않는 지표와 개념이 쓰였습니다.</b> 정확도·MSE·0~1 정규화는 회귀 모델 기준이고, 모든 불량을 <code>class : 1</code>로 표기한 것은 YOLO의 클래스 번호 체계와 충돌합니다.</li>
+  </ul>
+
+  <h3>우선 수정 항목</h3>
+  <table class="grid">
+    <tr><th style="width:28px">#</th><th style="width:62px">심각도</th><th>내용</th><th style="width:130px">해당 슬라이드</th></tr>
+    <tr><td>1</td><td><span class="tag h">높음</span></td><td>다른 프로젝트 문구 제거 (영업이익/재고비용, 품목·상태·등급, 1달전·2달전·3달전, BASE_MONTH, 매입 견적 산출 내역)</td><td>8, 10, 14, 17, 18–19</td></tr>
+    <tr><td>2</td><td><span class="tag h">높음</span></td><td>불량 클래스 기준표(번호·코드·한글명·색상) 1장으로 통일하고 전 화면에 적용</td><td>4–5, 7–8, 15–19</td></tr>
+    <tr><td>3</td><td><span class="tag h">높음</span></td><td>모델 지표를 YOLO 기준(Precision, Recall, mAP, box/cls/dfl loss)으로 재정의</td><td>9–10</td></tr>
+    <tr><td>4</td><td><span class="tag h">높음</span></td><td>대시보드 불량률 그래프의 기간(7개월)이 표시 기간(12개월)과 다르고, 누적 막대가 생산량을 이중 계산할 수 있음</td><td>12, 14</td></tr>
+    <tr><td>5</td><td><span class="tag h">높음</span></td><td>설명의 조회 조건·표시 항목이 화면과 다름 (분류 유형, 라인 번호 미표시 등), 작성 중 표시(+++++) 잔존</td><td>4–5, 8</td></tr>
+    <tr><td>6</td><td><span class="tag m">중간</span></td><td>용어 통일: 정상/불량 · 합격/불합격 · 0/1, 불량율/불량률, 품질검사/품질 검사, Lane1/1</td><td>전체</td></tr>
+    <tr><td>7</td><td><span class="tag m">중간</span></td><td>공통 컴포넌트 규칙 정의: 조회 조건 입력 방식, 아이콘(필터·조회·다운로드), 페이징, 빈 결과·오류 처리</td><td>전체</td></tr>
+    <tr><td>8</td><td><span class="tag m">중간</span></td><td>화면 간 데이터 흐름(원본→전처리→학습→검증→판정→내역·대시보드)과 운영 모델 지정 방식 명시</td><td>전체</td></tr>
+  </table>
+</section>
+
+<!-- 2. 공통 피드백 -->
+<section class="page">
+  <h2>2. 여러 페이지에 걸친 공통 피드백</h2>
+
+  <h3>2-1. 용어·표기 불일치</h3>
+  <table class="grid">
+    <tr><th style="width:110px">항목</th><th>현재 혼용 상태</th><th style="width:170px">제안</th></tr>
+    <tr><td>판정 결과</td><td>정상/불량 (슬라이드 3, 18) · 합격/불합격 (슬라이드 15–16) · class 0/1 (슬라이드 4, 7)</td><td>화면 표시는 <b>정상/불량</b>, 내부 값은 별도 코드로 통일</td></tr>
+    <tr><td>불량 유형</td><td>영문 코드 5종 정의 (슬라이드 5, 8) ≠ 화면 예시 영문 3종 (슬라이드 4, 7) ≠ 한글명 (슬라이드 15, 18)</td><td>2-2의 기준표로 통일</td></tr>
+    <tr><td>라인</td><td>썸네일 <code>Lane1</code> (슬라이드 2, 15) · 표 <code>1</code> (슬라이드 15, 18)</td><td>표시 형식 하나로 통일 (예: <code>라인 1</code>)</td></tr>
+    <tr><td>일시 형식</td><td><code>2026-09-02-11:03:55</code> (슬라이드 2, 15, 18) · <code>2026-10-23 09:00:00</code> (슬라이드 7, 9)</td><td><code>YYYY-MM-DD HH:mm:ss</code>로 통일</td></tr>
+    <tr><td>불량률</td><td>불량율 (슬라이드 12 그래프, 14 설명) · 불량률 (슬라이드 12 목록 제목)</td><td><b>불량률</b> (맞춤법상 '률')</td></tr>
+    <tr><td>품질검사</td><td>품질검사 (대부분) · 품질 검사 (슬라이드 9–10)</td><td>하나로 통일</td></tr>
+    <tr><td>조회 조건 라벨</td><td>조회일자 · 조회 기간 · 학습일자 · 표시 기간</td><td>기간이면 '조회 기간', 단일 날짜면 '조회일자'</td></tr>
+    <tr><td>조회 동작</td><td>조회 아이콘 (슬라이드 3, 5, 8, 10) · 조회 버튼 (슬라이드 17, 19)</td><td>화면과 같은 명칭으로 통일</td></tr>
+    <tr><td>모델명</td><td><code>Defection_Detect_Model</code></td><td>defection은 '이탈·변절'이라는 뜻이라 <code>Defect_Detect_Model</code> 권장</td></tr>
+  </table>
+
+  <h3>2-2. 불량 클래스 기준표 필요</h3>
+  <p>지금은 화면마다 다른 이름이 쓰여 개발자가 DB 코드값과 화면 표시명을 정할 수 없습니다. 문서 앞쪽에 아래와 같은 기준표를 한 장 두고, 모든 화면이 이를 참조하게 하세요. (예시이며 최종 코드는 확정 필요)</p>
+  <table class="grid">
+    <tr><th>YOLO class id</th><th>코드</th><th>한글명</th><th>정의</th><th>현재 문서에 쓰인 다른 이름</th></tr>
+    <tr><td>0</td><td><code>stick_offset</code></td><td>살 조립 이탈</td><td>살이 튀어나와 있음</td><td>-</td></tr>
+    <tr><td>1</td><td><code>stick_broken</code></td><td>살 끊김 불량</td><td>살이 중간에 끊겨 있음</td><td><code>broken_bar</code></td></tr>
+    <tr><td>2</td><td><code>thread_defect</code></td><td>엮음실 불량</td><td>엮음 실이 튀어나와 있음</td><td><code>thread_defection</code>, <code>broken_thread</code></td></tr>
+    <tr><td>3</td><td><code>bond_overflow</code></td><td>본딩 불량</td><td>본드가 안쪽까지 흘러듦</td><td><code>bond_leak</code></td></tr>
+    <tr><td>4</td><td><code>unraveled</code></td><td>풀림</td><td>조립이 풀림</td><td><code>broken</code> (살 끊김과 혼동 우려)</td></tr>
+  </table>
+  <p class="note">YOLO 검출에서 정상 이미지는 클래스가 아니라 '박스 없음(빈 라벨)'입니다. 따라서 정상/불량 여부는 클래스 번호가 아니라 "검출된 박스가 있는가"로 정해진다는 점도 함께 적어 주세요.</p>
+</section>
+
+<section class="page">
+  <h3>2-3. 공통 컴포넌트 규칙이 정의되지 않음</h3>
+  <p>모든 화면에 반복되는 요소지만 동작이 어디에도 정의되어 있지 않습니다. 공통 규칙 페이지를 하나 추가하면 화면별 설명이 짧아지고 구현도 일관됩니다.</p>
+  <ul>
+    <li><b>조회 조건 입력:</b> 날짜는 달력 선택인지 직접 입력인지, 라인 번호·불량 여부·불량 유형은 드롭다운인지와 선택 가능한 값 목록. 시작일 &gt; 종료일, 최대 조회 기간 같은 입력 검증 규칙.</li>
+    <li><b>아이콘:</b> 조회 조건 왼쪽의 필터 아이콘, 오른쪽 돋보기 아이콘, 목록 제목 오른쪽 다운로드 아이콘의 동작. 다운로드는 파일 형식(xlsx/csv/zip)과 범위(현재 페이지/전체 조회 결과)까지.</li>
+    <li><b>페이징:</b> 화면마다 21·8·12·7·12건으로 다르고, 예시는 항상 5페이지가 보이지만 60건 ÷ 21건이면 3페이지입니다. 페이지 번호 표시 개수, 처음/이전 버튼 비활성 조건, 조건 변경 시 1페이지 복귀 여부를 정의해야 합니다.</li>
+    <li><b>정렬 동점 처리:</b> 같은 촬영 시각이 여러 라인에서 생길 때의 2차 정렬 기준.</li>
+    <li><b>상태 화면:</b> 조회 결과 없음, 로딩 중, 오류(이미지 로드 실패 포함) 때 표시할 내용.</li>
+    <li><b>권한:</b> 메뉴(데이터처리 / AI 모델링 / AI 서비스)별 접근 권한이 사용자 역할에 따라 다른지.</li>
+  </ul>
+
+  <h3>2-4. 화면 간 데이터 흐름과 연결 정보 부재</h3>
+  <p>문서는 원본 이미지 → 전처리 데이터 → 학습 → 검증 → 합불 판정 → 내역·대시보드 순서로 구성되어 있지만, 화면 사이를 잇는 정보가 없습니다.</p>
+  <ul>
+    <li>원본 이미지(슬라이드 2)와 전처리 이미지(슬라이드 4)가 같은 건임을 잇는 이미지 ID가 화면에 없습니다.</li>
+    <li>어떤 전처리 데이터로 어떤 모델을 학습했는지(슬라이드 7), 합불 판정(슬라이드 15)에 어느 모델이 쓰였는지 알 수 없습니다. 운영 모델을 지정하는 화면이나 표시가 필요합니다.</li>
+    <li>대시보드(슬라이드 12–13)의 생산량·불량수가 AI 판정 결과(슬라이드 18)에서 집계되는지, 별도 생산 실적에서 오는지 명시가 필요합니다.</li>
+  </ul>
+
+  <h3>2-5. 예시 데이터 불일치</h3>
+  <ul>
+    <li>슬라이드 2, 15의 조회 조건은 2026-10-17 ~ 10-23 또는 2026-10-23인데, 목록 예시 데이터는 2026-09-02입니다. 개발자가 조회 조건의 기준 컬럼을 오해할 수 있습니다.</li>
+    <li>목록 건수 표시(<code>1 - 21 / 60</code>)와 페이지 번호(1~5)가 맞지 않습니다.</li>
+  </ul>
+
+  <h3>2-6. 문서 구성</h3>
+  <ul>
+    <li>화면 ID가 TD3-001, 002, 005, 006, 009, 010, 011로 건너뜁니다. 빠진 번호(003, 004, 007, 008)가 의도된 것인지 표기해 주세요.</li>
+    <li>표지 3장의 문서코드가 모두 <code>SF-TD1</code>입니다. 한 문서의 장 구분이면 표지 대신 간지로, 별도 문서면 코드를 다르게 하는 것이 좋습니다. AI 모델링 표지는 작성자가 비어 있습니다.</li>
+    <li>개정 이력, 목차, 메뉴 구조도가 없습니다.</li>
+    <li>불량 여부를 테두리 색(빨강/초록)만으로 구분합니다. 색각 이상 사용자를 위해 아이콘이나 텍스트 배지를 함께 표시하는 것을 권장합니다.</li>
+  </ul>
+</section>
+
+<!-- 3. 페이지별 -->
+<section class="page">
+  <h2>3. 페이지별 피드백</h2>
+
+  <h3>표지 (슬라이드 1, 6, 11)</h3>
+  <div class="box">
+    <ul>
+      <li><span class="tag l">낮음</span> 세 표지의 문서코드가 모두 <code>SF-TD1</code>이고, 화면 ID는 <code>TD3</code>, 프로그램 ID는 <code>TD4</code> 접두어를 써서 체계가 연결되지 않습니다.</li>
+      <li><span class="tag l">낮음</span> 슬라이드 6(AI 모델링 표지)의 작성자가 비어 있습니다.</li>
+    </ul>
+  </div>
+
+  <h3>TD3-001 품질검사 데이터 조회 (슬라이드 2–3)</h3>
+  <div class="shots">
+    <figure><img src="slides_png/slide_02.png"><figcaption>슬라이드 2 · 화면</figcaption></figure>
+    <figure><img src="slides_png/slide_03.png"><figcaption>슬라이드 3 · 설명</figcaption></figure>
+  </div>
+  <div class="box"><h4>설명이 화면 구성을 충분히 설명하는가</h4><ul>
+    <li><span class="tag m">중간</span> 조회 조건 입력 방식(달력, 드롭다운)과 라인 번호 선택값 목록이 없습니다.</li>
+    <li><span class="tag m">중간</span> 필터 아이콘, 조회 아이콘, ❷ 오른쪽 다운로드 아이콘의 동작이 없습니다.</li>
+    <li><span class="tag m">중간</span> 썸네일을 클릭했을 때의 동작(원본 확대, 상세 화면 이동 등)이 정의되지 않았습니다.</li>
+  </ul></div>
+  <div class="box"><h4>개발자가 의도를 이해할 수 있는가</h4><ul>
+    <li><span class="tag l">낮음</span> "최근 촬영 시각이 상단"은 표 기준 표현입니다. 썸네일 그리드는 '왼쪽→오른쪽, 위→아래 순으로 최신순'처럼 방향까지 적어 주세요.</li>
+  </ul></div>
+  <div class="box"><h4>기술적인 문제</h4><ul>
+    <li><span class="tag m">중간</span> 한 페이지에 원본 이미지 21장을 띄우면 느려집니다. 목록에는 썸네일을 쓰고 원본은 클릭 시 불러온다는 규칙이 필요합니다.</li>
+    <li><span class="tag m">중간</span> 21건씩이면 60건은 3페이지인데 페이징은 5페이지까지 보입니다.</li>
+  </ul></div>
+  <div class="box"><h4>다른 페이지와의 일관성</h4><ul>
+    <li><span class="tag m">중간</span> 조회일자는 2026-10-17 ~ 10-23인데 예시 이미지 촬영일은 2026-09-02입니다.</li>
+    <li><span class="tag l">낮음</span> 썸네일의 <code>Lane1</code>이 슬라이드 15·18의 라인 번호 <code>1</code>과 표기가 다르고, 일시 형식 <code>2026-09-02-11:03:55</code>도 슬라이드 7·9와 다릅니다.</li>
+  </ul></div>
+  <div class="box"><h4>기타</h4><ul>
+    <li><span class="tag l">낮음</span> 조회 조건의 마지막 줄(라인 번호와 불량 여부의 기본값…)만 회색 글씨입니다. 작성 중 표시라면 확정 후 검정으로 바꿔 주세요.</li>
+    <li><span class="tag l">낮음</span> "불량 여부 선택을 통해 정상, 불량, 전체 조회를 변경한다"는 ❶ 설명과 겹칩니다.</li>
+  </ul></div>
+</section>
+
+<section class="page">
+  <h3>TD3-002 품질검사 전처리 데이터 조회 (슬라이드 4–5)</h3>
+  <div class="shots">
+    <figure><img src="slides_png/slide_04.png"><figcaption>슬라이드 4 · 화면</figcaption></figure>
+    <figure><img src="slides_png/slide_05.png"><figcaption>슬라이드 5 · 설명</figcaption></figure>
+  </div>
+  <div class="box"><h4>설명이 화면 구성을 충분히 설명하는가</h4><ul>
+    <li><span class="tag h">높음</span> 화면 설명 ❶은 "분류 유형, 불량 유형"이지만 화면과 기능 설명은 "라인 번호, 불량 여부, 불량 유형"입니다.</li>
+    <li><span class="tag h">높음</span> ❷ 설명은 "라인 번호, 불량 여부, 불량 유형을 표시"인데, 화면에는 라인 번호와 촬영 일시가 없고 <code>class : 번호</code>와 클래스명만 있습니다.</li>
+    <li><span class="tag h">높음</span> <code>+++++ [실제 데이터 전처리 관련 주요 내용 추가]</code> 작성 중 표시가 남아 있습니다. 전처리 내용(김발장 영역 1:1 자르기, 크기 조정, 라벨 파일 형식)이 이 화면의 핵심인데 비어 있습니다.</li>
+    <li><span class="tag m">중간</span> 이미지 위 초록색 검출 박스(바운딩 박스)에 대한 설명이 없습니다. 박스 색, 라벨 표시 여부, 한 이미지에 박스가 여러 개일 때의 표시 방법이 필요합니다.</li>
+  </ul></div>
+  <div class="box"><h4>개발자가 의도를 이해할 수 있는가</h4><ul>
+    <li><span class="tag m">중간</span> 조회 전용 화면인지, 라벨을 확인·수정하는 화면인지 알 수 없습니다. 라벨을 누가 어디서 만드는지도 적어 주세요.</li>
+  </ul></div>
+  <div class="box"><h4>기술적인 문제</h4><ul>
+    <li><span class="tag h">높음</span> 모든 불량을 <code>class : 1</code>, 정상을 <code>class : 0</code>으로 표기했습니다. YOLO에서 class 번호는 불량 유형마다 다르고, 정상 이미지는 박스가 없는 빈 라벨입니다. 이대로면 개발자가 class 0을 '정상' 클래스로 학습시키는 잘못된 구조를 만들 수 있습니다.</li>
+    <li><span class="tag h">높음</span> 화면 예시 클래스명(<code>broken_thread</code>, <code>bond_leak</code>, <code>broken_bar</code>)이 설명에 정의된 5종 어디에도 없습니다.</li>
+    <li><span class="tag m">중간</span> <code>thread_defection</code>은 '이탈'이라는 뜻이라 <code>thread_defect</code>가 적절하고, 풀림의 <code>broken</code>은 살 끊김(<code>stick_broken</code>)과 헷갈립니다.</li>
+  </ul></div>
+  <div class="box"><h4>다른 페이지와의 일관성</h4><ul>
+    <li><span class="tag l">낮음</span> 상단 메뉴 경로에 '데이터처리 &gt;'가 빠졌습니다. 다른 화면은 모두 '대메뉴 &gt; 화면명' 형식입니다.</li>
+    <li><span class="tag l">낮음</span> 슬라이드 2와 달리 목록 영역에 테두리가 없습니다.</li>
+  </ul></div>
+  <div class="box"><h4>기타</h4><ul>
+    <li><span class="tag l">낮음</span> 오타: "불량 여부<b>은</b>" → "불량 여부<b>는</b>", "다음과 같다" 마침표 누락.</li>
+    <li><span class="tag l">낮음</span> 2행 첫 번째 썸네일의 라벨이 이미지와 겹쳐 있습니다.</li>
+  </ul></div>
+  <div class="fix">수정 제안: 목록 항목을 "썸네일(검출 박스 포함), 촬영 일시, 라인 번호, 불량 여부, 불량 유형(한글명)"으로 확정하고, class 표기는 2-2 기준표의 id와 코드로 바꾸세요.</div>
+</section>
+
+<section class="page">
+  <h3>TD3-005 품질검사 AI 모델링 (슬라이드 7–8)</h3>
+  <div class="shots">
+    <figure><img src="slides_png/slide_07.png"><figcaption>슬라이드 7 · 화면</figcaption></figure>
+    <figure><img src="slides_png/slide_08.png"><figcaption>슬라이드 8 · 설명</figcaption></figure>
+  </div>
+  <div class="box"><h4>설명이 화면 구성을 충분히 설명하는가</h4><ul>
+    <li><span class="tag h">높음</span> 슬라이드 5와 같은 <code>+++++</code> 작성 중 표시와 클래스 정의가 그대로 복사되어 있습니다. 클래스 정의는 기준표 참조로 바꾸세요.</li>
+    <li><span class="tag m">중간</span> ❷ 전처리 목록은 한 줄 7칸 그리드인데 "페이지당 8건"이라 두 번째 줄에 1건만 들어갑니다. 화면 예시도 두 번째 줄이 잘려 있어 배치를 판단할 수 없습니다.</li>
+    <li><span class="tag m">중간</span> 비고 컬럼에 무엇을 표시하는지 없습니다.</li>
+  </ul></div>
+  <div class="box"><h4>개발자가 의도를 이해할 수 있는가</h4><ul>
+    <li><span class="tag h">높음</span> 화면명은 "AI 모델링"인데 학습 실행 기능(데이터셋 선택, 파라미터, 학습 시작, 진행 상태)이 없습니다. 학습이 배치로 자동 실행된다면(예시상 매일 09:00) 그 사실과 주기를 적어 주세요.</li>
+    <li><span class="tag m">중간</span> ❷ 데이터와 ❸ 모델 사이에 어떤 데이터로 어떤 모델을 학습했는지 연결 정보가 없습니다.</li>
+    <li><span class="tag m">중간</span> ❶ 날짜 조건이 ❸에만 적용된다면, 화면에서도 ❸ 영역에 붙여 사용자가 혼동하지 않게 하세요.</li>
+  </ul></div>
+  <div class="box"><h4>기술적인 문제</h4><ul>
+    <li><span class="tag h">높음</span> "❷ 전처리 데이터는 최신 완료 집계월(BASE_MONTH) 한 달을 조회"는 월 집계 데이터 개념으로, 이미지 데이터에는 해당하지 않습니다. '학습에 사용된 데이터셋 버전' 같은 기준으로 다시 정의해야 합니다.</li>
+    <li><span class="tag l">낮음</span> 오타: <code>DATIME</code> → <code>DATETIME</code>, "AI 학습 <b>정도</b>" → "AI 학습 <b>정보</b>". 조건 라벨 '학습일자'와 설명 '학습일시'도 맞춰 주세요.</li>
+  </ul></div>
+  <div class="box"><h4>다른 페이지와의 일관성</h4><ul>
+    <li><span class="tag m">중간</span> ❸ 학습 정보 조회는 슬라이드 9의 목록과 데이터가 같은데 페이지당 건수(8 vs 12)와 컬럼이 다릅니다. 중복이면 TD3-006(슬라이드 9)으로 이동하는 링크로 바꾸는 것도 방법입니다.</li>
+    <li><span class="tag l">낮음</span> 원본 pptx의 도형 이름에 '매입 견적 산출 전처리 데이터'가 남아 있습니다. 개발자가 파일을 열어 보면 혼란스러울 수 있습니다.</li>
+  </ul></div>
+</section>
+
+<section class="page">
+  <h3>TD3-006 품질 검사 AI 모델 검증 (슬라이드 9–10)</h3>
+  <div class="shots">
+    <figure><img src="slides_png/slide_09.png"><figcaption>슬라이드 9 · 화면</figcaption></figure>
+    <figure><img src="slides_png/slide_10.png"><figcaption>슬라이드 10 · 설명</figcaption></figure>
+  </div>
+  <div class="box"><h4>설명이 화면 구성을 충분히 설명하는가</h4><ul>
+    <li><span class="tag m">중간</span> 표시 기준(소수 4자리, NULL 표기)은 잘 정의되어 있습니다. 다만 비고에 "손실함수명, 스케일링, 검증기간, 저장 에포크"를 기록한다면서 예시가 비어 있어 형식을 알 수 없습니다. 예시 한 줄을 채워 주세요.</li>
+    <li><span class="tag l">낮음</span> "화면의 수량과 손실 값은 예시"라고 했지만 화면에 수량 항목이 없습니다.</li>
+  </ul></div>
+  <div class="box"><h4>개발자가 의도를 이해할 수 있는가</h4><ul>
+    <li><span class="tag h">높음</span> 화면명은 "검증"이지만 조회만 있습니다. 모델 비교, 운영 적용 모델 지정(합불 판정에 쓸 모델 선택) 기능이 필요한지 결정하고 적어 주세요. 운영 모델 표시 컬럼이 없으면 합불 판정(슬라이드 15)이 어떤 모델을 쓰는지 알 수 없습니다.</li>
+    <li><span class="tag m">중간</span> "기존 정확도(ACCURACY)의 퍼센트 표시를 유지한다"의 '기존'이 가리키는 대상이 이 문서에 없습니다.</li>
+  </ul></div>
+  <div class="box"><h4>기술적인 문제</h4><ul>
+    <li><span class="tag h">높음</span> YOLO 객체 검출 모델에 정확도(Accuracy)와 "목표값을 0~1 정규화한 MSE"는 맞지 않습니다. 이는 회귀(가격 예측) 모델의 지표입니다. 검출 모델은 보통 Precision, Recall, mAP@0.5, mAP@0.5:0.95를 쓰고, 손실은 box_loss, cls_loss, dfl_loss로 나뉩니다. 불량 유형별 AP도 함께 보여 주는 것을 권장합니다.</li>
+    <li><span class="tag m">중간</span> "손실 값의 조건은 비고에서 확인한다"가 모호합니다. 어떤 조건인지 구체적으로 적어 주세요.</li>
+  </ul></div>
+  <div class="box"><h4>다른 페이지와의 일관성</h4><ul>
+    <li><span class="tag l">낮음</span> 화면명 '품질 검사'(띄어쓰기)가 다른 화면의 '품질검사'와 다릅니다.</li>
+    <li><span class="tag l">낮음</span> 슬라이드 7과 같은 학습 목록인데 페이지당 건수가 다릅니다(12 vs 8).</li>
+  </ul></div>
+</section>
+
+<section class="page">
+  <h3>TD3-009 대시보드 (슬라이드 12–14)</h3>
+  <div class="shots">
+    <figure><img src="slides_png/slide_12.png"><figcaption>슬라이드 12 · 불량률 그래프</figcaption></figure>
+    <figure><img src="slides_png/slide_13.png"><figcaption>슬라이드 13 · 시간당 생산량</figcaption></figure>
+    <figure><img src="slides_png/slide_14.png"><figcaption>슬라이드 14 · 설명</figcaption></figure>
+  </div>
+  <div class="box"><h4>설명이 화면 구성을 충분히 설명하는가</h4><ul>
+    <li><span class="tag h">높음</span> ❷ 그래프의 가로축은 Jul-25 ~ Jan-26(7개월)인데 표시 기간은 2025-10 ~ 2026-09(12개월)입니다. 마지막 Jan-26은 '평균'이 날짜로 잘못 변환된 것으로 보입니다.</li>
+    <li><span class="tag m">중간</span> 불량률 계산식과 단위가 없습니다. 0.34는 %(932 ÷ 276,200 × 100 ≈ 0.34%)로 보이므로 축과 레이블에 % 표기가 필요합니다.</li>
+    <li><span class="tag m">중간</span> 시간당 생산량의 계산식(월 생산량 ÷ 가동 시간)과 데이터 출처가 없습니다.</li>
+  </ul></div>
+  <div class="box"><h4>개발자가 의도를 이해할 수 있는가</h4><ul>
+    <li><span class="tag m">중간</span> 기능 설명은 두 그래프를 15초마다 번갈아 보여준다고 하지만, 화면은 ❶❷ / ❸❹로 나뉘어 따로 있는 것처럼 보입니다. 한 영역에서 번갈아 표시하는지 명시하고, 현재 순서 표시, 일시 정지, 수동 전환 여부도 적어 주세요.</li>
+    <li><span class="tag l">낮음</span> ❸ 표시 기간은 ❶과 같은 설명이 반복됩니다. 같은 컴포넌트라면 하나로 합치세요.</li>
+  </ul></div>
+  <div class="box"><h4>기술적인 문제</h4><ul>
+    <li><span class="tag h">높음</span> 총생산량 위에 불량수량을 쌓으면, 총생산량에 불량이 포함된 경우 막대 높이가 이중 계산됩니다. '양품 + 불량'을 쌓거나 막대를 겹쳐 그리는 방식 중 하나로 정해 주세요. 설명의 "겹친 막대"가 누적인지 겹침인지도 모호합니다.</li>
+    <li><span class="tag m">중간</span> 왼쪽 축이 258,480부터 시작하고 눈금이 5,000 간격의 어색한 값입니다. 막대그래프 축을 0이 아닌 값에서 시작하면 차이가 과장되니, 축 최소값과 눈금 규칙, 천 단위 쉼표 표기를 정해 주세요.</li>
+    <li><span class="tag l">낮음</span> 시간당 생산량 그래프에서 '1,385' 레이블이 선과 겹칩니다. 단위도 (개)인데 다른 자료는 '매'를 씁니다.</li>
+  </ul></div>
+  <div class="box"><h4>다른 페이지와의 일관성</h4><ul>
+    <li><span class="tag h">높음</span> 기능 설명의 "영업이익을 그래프와 재고비용 그래프"는 다른 프로젝트 문구입니다. "완제품 불량률 그래프와 시간당 생산량 그래프"로 고쳐야 합니다.</li>
+    <li><span class="tag l">낮음</span> 목록 제목 '완제품불량률' · 그래프 제목 '월별 불량율' · 설명 '불량율'이 섞여 있습니다.</li>
+  </ul></div>
+</section>
+
+<section class="page">
+  <h3>TD3-010 AI 기반 품질검사 합불 판정 (슬라이드 15–17)</h3>
+  <div class="shots">
+    <figure><img src="slides_png/slide_15.png"><figcaption>슬라이드 15 · 불량 선택</figcaption></figure>
+    <figure><img src="slides_png/slide_16.png"><figcaption>슬라이드 16 · 정상 선택</figcaption></figure>
+    <figure><img src="slides_png/slide_17.png"><figcaption>슬라이드 17 · 설명</figcaption></figure>
+  </div>
+  <div class="box"><h4>설명이 화면 구성을 충분히 설명하는가</h4><ul>
+    <li><span class="tag h">높음</span> "비교 목록은 품목과 상태·등급별로 구분하여 표시한다", "현재월 2026-10의 1달전·2달전·3달전은…"은 다른 프로젝트 문구입니다. 삭제해야 합니다.</li>
+    <li><span class="tag m">중간</span> ❹ 선택 이미지에 불량 위치(검출 박스), 신뢰도(confidence), 판정에 쓴 모델 버전을 표시할지 정의되지 않았습니다. 예시의 불량 이미지에도 박스가 없어 어디가 불량인지 보이지 않습니다.</li>
+    <li><span class="tag m">중간</span> 화면 진입 시 기본 선택 항목(첫 번째 이미지 등)과 페이지를 넘겼을 때 선택 상태 처리가 없습니다.</li>
+    <li><span class="tag l">낮음</span> 슬라이드 16이 '정상 이미지를 선택했을 때'의 예시라는 설명이 없습니다.</li>
+  </ul></div>
+  <div class="box"><h4>개발자가 의도를 이해할 수 있는가</h4><ul>
+    <li><span class="tag h">높음</span> 업무 설명은 "모니터링"인데 실시간 갱신 여부와 주기가 없습니다. 실시간이라면 새 이미지가 들어올 때 목록과 페이지가 어떻게 바뀌는지 정해야 합니다.</li>
+    <li><span class="tag m">중간</span> 작업자가 AI 판정을 수정(오판정 정정)하거나 재검사하는 흐름이 필요한지 적어 주세요.</li>
+  </ul></div>
+  <div class="box"><h4>기술적인 문제</h4><ul>
+    <li><span class="tag m">중간</span> "최신 순으로 정렬하며 같은 라인 번호를 먼저 표시"는 1차·2차 정렬 기준이 모호합니다.</li>
+    <li><span class="tag m">중간</span> 불량 판정 기준(신뢰도 임계값)이 없습니다.</li>
+    <li><span class="tag l">낮음</span> ❸ 선택 정보 표가 콘텐츠 영역 오른쪽 경계를 넘어갑니다.</li>
+  </ul></div>
+  <div class="box"><h4>다른 페이지와의 일관성</h4><ul>
+    <li><span class="tag m">중간</span> ❸의 '합격/불합격'이 다른 화면의 '정상/불량'과 다릅니다.</li>
+    <li><span class="tag m">중간</span> 조회일자는 2026-10-23인데 예시 이미지는 2026-09-02입니다.</li>
+    <li><span class="tag l">낮음</span> 기능 설명은 '조회 버튼', 다른 화면은 '조회 아이콘'입니다.</li>
+  </ul></div>
+</section>
+
+<section class="page">
+  <h3>TD3-011 AI 기반 품질검사 내역조회 (슬라이드 18–19)</h3>
+  <div class="shots">
+    <figure><img src="slides_png/slide_18.png"><figcaption>슬라이드 18 · 화면</figcaption></figure>
+    <figure><img src="slides_png/slide_19.png"><figcaption>슬라이드 19 · 설명</figcaption></figure>
+  </div>
+  <div class="box"><h4>설명이 화면 구성을 충분히 설명하는가</h4><ul>
+    <li><span class="tag h">높음</span> 목록 제목이 "매입 견적 산출 내역 조회"이고, 설명 페이지의 화면명은 "매입 견적 산출 내역", 작성일 2026.10.02, 작성자가 비어 있습니다. 다른 프로젝트 양식이 그대로 남은 것입니다.</li>
+    <li><span class="tag m">중간</span> "라인 번호별 품목의 불량 여부"라고 했지만 품목 컬럼이 없습니다.</li>
+    <li><span class="tag m">중간</span> 행을 클릭했을 때 이미지를 보여주는지(합불 판정 화면, 슬라이드 15 연결) 정의되지 않았습니다.</li>
+  </ul></div>
+  <div class="box"><h4>개발자가 의도를 이해할 수 있는가</h4><ul>
+    <li><span class="tag m">중간</span> 합불 판정(슬라이드 15, 이미지 중심)과 이 화면(표 중심 이력 조회)의 용도 차이를 업무 설명에 적어 주세요.</li>
+  </ul></div>
+  <div class="box"><h4>기술적인 문제</h4><ul>
+    <li><span class="tag m">중간</span> '예측 일시'가 촬영 시각인지 AI 판정 시각인지 정의가 필요합니다. 다른 화면은 '촬영 일시'를 씁니다.</li>
+    <li><span class="tag m">중간</span> 조회 기간 기본값이 "현재월"인데 예시는 2026-09-23 ~ 10-23(최근 1달)이고, 업무 설명은 "월별"입니다. 셋 중 하나로 정해 주세요.</li>
+    <li><span class="tag m">중간</span> 한 이미지에서 불량이 여러 개 검출되면 불량 유형 컬럼에 어떻게 표시할지(대표 1개 또는 모두 나열) 정해야 합니다.</li>
+  </ul></div>
+  <div class="box"><h4>다른 페이지와의 일관성</h4><ul>
+    <li><span class="tag m">중간</span> 불량 유형을 한글명으로 표시하는데, 슬라이드 4·7은 영문 코드입니다. 기준표에 따라 표시명을 정해 주세요.</li>
+    <li><span class="tag l">낮음</span> 오타: "품질 검<b>새</b>" → "검<b>사</b>", "정렬하<b>한</b>다" → "정렬한다".</li>
+  </ul></div>
+</section>
+
+<section class="page">
+  <h2>4. 수정 체크리스트</h2>
+  <table class="grid">
+    <tr><th style="width:24px">☐</th><th>항목</th><th style="width:130px">해당 슬라이드</th></tr>
+    <tr><td>☐</td><td>다른 프로젝트 문구 삭제 (영업이익/재고비용, 품목·상태·등급, 1·2·3달전, BASE_MONTH, MSE·정규화, 매입 견적 산출 내역)</td><td>8, 10, 14, 17, 18–19</td></tr>
+    <tr><td>☐</td><td>TD3-011 설명 페이지 헤더(화면명·작성일·작성자) 수정</td><td>19</td></tr>
+    <tr><td>☐</td><td><code>+++++</code> 작성 중 표시 내용 채우기 (전처리 방식)</td><td>5, 8</td></tr>
+    <tr><td>☐</td><td>불량 클래스 기준표 추가 후 화면 예시 라벨·설명 일괄 교체</td><td>4–5, 7–8, 15–19</td></tr>
+    <tr><td>☐</td><td>YOLO 지표로 TD3-006 컬럼·표시 기준 재정의, 운영 모델 지정 방식 결정</td><td>9–10, 17</td></tr>
+    <tr><td>☐</td><td>대시보드 불량률 그래프 기간을 12개월로, 막대 구성(양품+불량) 확정, % 단위 표기</td><td>12, 14</td></tr>
+    <tr><td>☐</td><td>TD3-002 설명과 화면 항목 일치 (조회 조건, 목록 표시 항목, 메뉴 경로)</td><td>4–5</td></tr>
+    <tr><td>☐</td><td>용어 통일 (정상/불량, 불량률, 품질검사, 라인 표기, 일시 형식, 조회 아이콘/버튼)</td><td>전체</td></tr>
+    <tr><td>☐</td><td>공통 규칙 페이지 추가 (입력 방식, 아이콘, 페이징, 정렬, 빈 결과·오류, 권한)</td><td>전체</td></tr>
+    <tr><td>☐</td><td>예시 데이터 날짜를 조회 조건에 맞추고, 건수와 페이지 수 맞추기</td><td>2, 4, 7, 9, 15–16, 18</td></tr>
+    <tr><td>☐</td><td>TD3-010 실시간 갱신·기본 선택·검출 박스·신뢰도 표시 정의</td><td>15–17</td></tr>
+    <tr><td>☐</td><td>화면 ID 누락 번호 확인, 표지 문서코드·작성자 정리, 개정 이력·목차·메뉴 구조도 추가</td><td>1, 6, 11 · 문서 전체</td></tr>
+    <tr><td>☐</td><td>오타 수정 (DATIME, 학습 정도, 불량 여부은, 검새, 정렬하한다, Defection)</td><td>5, 7–9, 19</td></tr>
+  </table>
+</section>
+
+</body>
+</html>
