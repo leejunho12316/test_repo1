@@ -18,6 +18,7 @@ namespace KeyboardGuitar
         public int Interval = 2;
         public bool PairPattern;
         public int Opacity = 100;   // 10~100
+        public int OverlayCorner;   // 0 오른쪽 아래, 1 왼쪽 아래, 2 오른쪽 위, 3 왼쪽 위
         public KeyMap Keys = KeyMap.CreateDefault();
 
         public static Settings Load(string dir)
@@ -44,6 +45,7 @@ namespace KeyboardGuitar
             if (kv.TryGetValue("interval", out v)) s.Interval = ToInt(v, 2);
             if (kv.TryGetValue("pairPattern", out v)) s.PairPattern = v == "1";
             if (kv.TryGetValue("opacity", out v)) s.Opacity = ToInt(v, 100);
+            if (kv.TryGetValue("overlayCorner", out v)) s.OverlayCorner = ToInt(v, 0);
             if (kv.TryGetValue("keymap", out v)) s.Keys = KeyMap.Deserialize(v);
             s.Normalize();
             return s;
@@ -56,6 +58,7 @@ namespace KeyboardGuitar
             Interval = Clamp(Interval, 2, MaxInterval);
             if (StartDegree < 1) StartDegree = 1;
             Opacity = Clamp(Opacity, 10, 100);
+            OverlayCorner = Clamp(OverlayCorner, 0, 3);
         }
 
         public void Save(string dir)
@@ -69,6 +72,7 @@ namespace KeyboardGuitar
             sb.AppendLine("interval=" + Interval);
             sb.AppendLine("pairPattern=" + (PairPattern ? 1 : 0));
             sb.AppendLine("opacity=" + Opacity);
+            sb.AppendLine("overlayCorner=" + OverlayCorner);
             sb.AppendLine("keymap=" + Keys.Serialize());
             try { File.WriteAllText(Path.Combine(dir, FileName), sb.ToString(), Encoding.UTF8); }
             catch (IOException) { }

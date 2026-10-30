@@ -12,6 +12,7 @@ namespace KeyboardGuitar
 
         readonly Timer hideTimer = new Timer { Interval = 500 };
         string text = "";
+        public int Corner;   // Settings.OverlayCorner
         Color color = Color.White;
 
         public OverlayForm()
@@ -59,7 +60,10 @@ namespace KeyboardGuitar
             text = t;
             color = c;
             Rectangle wa = Screen.PrimaryScreen.WorkingArea;
-            Bounds = new Rectangle(wa.Right - width - EdgeGap, wa.Bottom - BoxSize - EdgeGap, width, BoxSize);
+            bool left = Corner == 1 || Corner == 3, top = Corner >= 2;
+            int x = left ? wa.Left + EdgeGap : wa.Right - width - EdgeGap;
+            int y = top ? wa.Top + EdgeGap : wa.Bottom - BoxSize - EdgeGap;
+            Bounds = new Rectangle(x, y, width, BoxSize);
             if (!Visible) Show();
             Invalidate();
             hideTimer.Stop();

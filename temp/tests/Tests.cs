@@ -312,11 +312,14 @@ namespace KeyboardGuitar
 
             string dir = Path.Combine(Path.GetTempPath(), "kg_settings_test");
             Directory.CreateDirectory(dir);
-            var s = new Settings { Scale = "Dorian (수정 필요)", BlockMode = true, Dir = Direction.Mixed, Interval = 1, StartDegree = 0, Opacity = 5, PairPattern = true };
+            var s = new Settings { Scale = "Dorian (수정 필요)", BlockMode = true, Dir = Direction.Mixed, Interval = 1, StartDegree = 0, Opacity = 5, PairPattern = true, OverlayCorner = 3 };
             s.Keys.Assign(new Pos(2, 13), KeyCodes.Parse("Z"));
             s.Save(dir);
             Settings l = Settings.Load(dir);
-            Check(l.Scale == s.Scale && l.BlockMode && l.Dir == Direction.Mixed && l.PairPattern, "설정 저장/불러오기");
+            Check(l.Scale == s.Scale && l.BlockMode && l.Dir == Direction.Mixed && l.PairPattern && l.OverlayCorner == 3, "설정 저장/불러오기 (O/X 위치 포함)");
+            var bad = new Settings { OverlayCorner = 9 };
+            bad.Normalize();
+            Check(bad.OverlayCorner == 3, "O/X 위치 범위 보정");
             Check(l.Interval == 2 && l.StartDegree == 1 && l.Opacity == 10, "불러올 때 범위 보정 (간격 2 미만 → 2, 투명도 10~100)");
             Check(l.Keys.KeyAt(new Pos(2, 13)) == KeyCodes.Parse("Z") && l.Keys.KeyAt(new Pos(6, 1)) == -1, "키 매칭도 저장");
             File.Delete(Path.Combine(dir, Settings.FileName));

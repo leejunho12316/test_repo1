@@ -84,6 +84,7 @@ namespace KeyboardGuitar
                 PairPattern = Settings.PairPattern
             });
             overlay.SetOpacity(Settings.Opacity);
+            overlay.Corner = Settings.OverlayCorner;
             Settings.Save(dir);
         }
 
@@ -104,6 +105,17 @@ namespace KeyboardGuitar
             Settings.Opacity = percent;
             Settings.Normalize();
             overlay.SetOpacity(Settings.Opacity);
+            if (keyMapForm != null && !keyMapForm.IsDisposed) keyMapForm.Opacity = Settings.Opacity / 100.0;
+            Settings.Save(dir);
+        }
+
+        // O/X 위치를 바꾸고 새 위치에 O를 잠깐 보여준다.
+        public void SetOverlayCorner(int corner)
+        {
+            Settings.OverlayCorner = corner;
+            Settings.Normalize();
+            overlay.Corner = Settings.OverlayCorner;
+            overlay.ShowResult(true);
             Settings.Save(dir);
         }
 

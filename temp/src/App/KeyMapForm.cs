@@ -47,8 +47,20 @@ namespace KeyboardGuitar
                 app.Settings.Keys = KeyMap.CreateDefault();
                 Changed();
             };
-            Controls.AddRange(new Control[] { grid, help, reset });
-            ClientSize = new Size(grid.Right + 8, reset.Bottom + 8);
+
+            // O/X 표시 위치 (Settings.OverlayCorner 순서)
+            var cornerLabel = new Label { Text = "O/X 표시 위치", AutoSize = true, Location = new Point(8, reset.Bottom + 16) };
+            var cornerBox = new ComboBox { DropDownStyle = ComboBoxStyle.DropDownList, Width = 120 };
+            cornerBox.Items.AddRange(new object[] { "오른쪽 아래", "왼쪽 아래", "오른쪽 위", "왼쪽 위" });
+            cornerBox.SelectedIndex = app.Settings.OverlayCorner;
+            cornerBox.Location = new Point(100, reset.Bottom + 12);
+            cornerBox.SelectedIndexChanged += delegate { app.SetOverlayCorner(cornerBox.SelectedIndex); };
+
+            Controls.AddRange(new Control[] { grid, help, reset, cornerLabel, cornerBox });
+            ClientSize = new Size(grid.Right + 8, cornerBox.Bottom + 10);
+            Opacity = app.Settings.Opacity / 100.0;
+            // 첫 포커스가 기본값 복원 버튼에 가면 Enter·Space 한 번에 매칭이 초기화되므로 드롭다운에 둔다.
+            ActiveControl = cornerBox;
 
             Load += delegate { WindowPlacement.CenterOnScreen(this); };
             app.Router.CaptureKey += OnCaptureKey;
