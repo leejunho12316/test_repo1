@@ -28,6 +28,8 @@ namespace KeyboardGuitar
             RouterRepeatTests();
             AltTabTests();
             SettingsTests();
+            HistoryTests();
+            BoardHoldTests();
 
             Console.WriteLine();
             Console.WriteLine("통과 {0} / 실패 {1}", passed, failed);
@@ -210,11 +212,13 @@ namespace KeyboardGuitar
         static void RouterTests()
         {
             var r = new InputRouter();
-            int toggles = 0, resets = 0;
+            int toggles = 0, resets = 0, boards = 0, releases = 0;
             var notes = new List<int>();
             var captured = new List<int>();
             r.ToggleRequested += delegate { toggles++; r.Active = !r.Active; };
             r.ResetRequested += delegate { resets++; };
+            r.BoardRequested += delegate { boards++; };
+            r.BoardReleased += delegate { releases++; };
             r.NoteKey += notes.Add;
             r.CaptureKey += captured.Add;
             int z = KeyCodes.Parse("Z");
@@ -230,8 +234,14 @@ namespace KeyboardGuitar
             Check(r.Process(z, 0x5A, false), "활성: Z 뗄 때도 막음");
             Check(r.Process(KeyCodes.Enter, 0x0D, true) && notes.Count == 2 && toggles == 1, "Ctrl 없는 Enter = 음");
             r.Process(KeyCodes.Enter, 0x0D, false);
-            Check(r.Process(KeyCodes.Up, 0x26, true) && resets == 1 && notes.Count == 2, "방향키 = 초기화");
+            Check(r.Process(KeyCodes.Right, 0x27, true) && resets == 1 && boards == 0 && notes.Count == 2, "→ = 초기화");
+            r.Process(KeyCodes.Right, 0x27, false);
+            Check(r.Process(KeyCodes.Left, 0x25, true) && boards == 1 && resets == 1 && notes.Count == 2, "← = 지판 보기 (초기화 안 함)");
+            Check(r.Process(KeyCodes.Left, 0x25, true) && boards == 1 && releases == 0, "← 누르고 있는 동안(자동 반복) 계속 보기");
+            Check(r.Process(KeyCodes.Left, 0x25, false) && releases == 1, "← 떼면 지판 숨기기");
+            Check(r.Process(KeyCodes.Up, 0x26, true) && r.Process(KeyCodes.Down, 0x28, true) && resets == 1 && boards == 1 && notes.Count == 2, "↑ ↓ = 막기만 함");
             r.Process(KeyCodes.Up, 0x26, false);
+            r.Process(KeyCodes.Down, 0x28, false);
             Check(!r.Process(KeyCodes.LWin, 0x5B, true), "Win 통과");
             r.Process(KeyCodes.LWin, 0x5B, false);
             Check(!r.Process(KeyCodes.LAlt, 0xA4, true) && !r.Process(KeyCodes.Tab, 0x09, true), "Alt+Tab 통과");
@@ -312,17 +322,83 @@ namespace KeyboardGuitar
 
             string dir = Path.Combine(Path.GetTempPath(), "kg_settings_test");
             Directory.CreateDirectory(dir);
-            var s = new Settings { Scale = "Dorian (수정 필요)", BlockMode = true, Dir = Direction.Mixed, Interval = 1, StartDegree = 0, Opacity = 5, PairPattern = true, OverlayCorner = 3 };
+            var s = new Settings { Scale = "Dorian (수정 필요)", BlockMode = true, Dir = Direction.Mixed, Interval = 1, StartDegree = 0, Opacity = 5, PairPattern = true, OverlayCorner = 3, ResultMode = 1 };
             s.Keys.Assign(new Pos(2, 13), KeyCodes.Parse("Z"));
             s.Save(dir);
             Settings l = Settings.Load(dir);
-            Check(l.Scale == s.Scale && l.BlockMode && l.Dir == Direction.Mixed && l.PairPattern && l.OverlayCorner == 3, "설정 저장/불러오기 (O/X 위치 포함)");
-            var bad = new Settings { OverlayCorner = 9 };
+            Check(l.Scale == s.Scale && l.BlockMode && l.Dir == Direction.Mixed && l.PairPattern && l.OverlayCorner == 3 && l.ResultMode == 1, "설정 저장/불러오기 (O/X 위치, 결과 표시 포함)");
+            var bad = new Settings { OverlayCorner = 9, ResultMode = 5 };
             bad.Normalize();
             Check(bad.OverlayCorner == 3, "O/X 위치 범위 보정");
+            Check(bad.ResultMode == 1 && new Settings().ResultMode == 0, "결과 표시 범위 보정, 기본값 지판 + O/X");
             Check(l.Interval == 2 && l.StartDegree == 1 && l.Opacity == 10, "불러올 때 범위 보정 (간격 2 미만 → 2, 투명도 10~100)");
             Check(l.Keys.KeyAt(new Pos(2, 13)) == KeyCodes.Parse("Z") && l.Keys.KeyAt(new Pos(6, 1)) == -1, "키 매칭도 저장");
             File.Delete(Path.Combine(dir, Settings.FileName));
+        }
+
+        static void BoardHoldTests()
+        {
+            int t = 0, boards = 0, releases = 0;
+            var notes = new List<int>();
+            var r = new InputRouter { Active = true };
+            r.Clock = () => t;
+            r.BoardRequested += delegate { boards++; };
+            r.BoardReleased += delegate { releases++; };
+            r.NoteKey += notes.Add;
+            int z = KeyCodes.Parse("Z");
+
+            // ←를 누른 채 음을 치면 ← 반복 신호가 멈추지만, 1.5초가 넘어도 지판은 유지
+            r.Process(KeyCodes.Left, 0x25, true);
+            for (int i = 1; i <= 5; i++)
+            {
+                t = i * 1000;
+                r.Process(z, 0x5A, true);
+                r.Process(z, 0x5A, false);
+                r.CheckBoard();
+            }
+            Check(boards == 1 && releases == 0 && notes.Count == 5, "← 누른 채 음을 5초 쳐도 지판 유지");
+            Check(r.Process(KeyCodes.Left, 0x25, false) && releases == 1, "그 뒤 ← 떼면 숨기기");
+
+            // 뗌을 놓친 경우: 키 이벤트가 BoardStaleMs 넘게 없으면 내림
+            r.Process(KeyCodes.Left, 0x25, true);
+            t += InputRouter.BoardStaleMs;
+            r.CheckBoard();
+            Check(releases == 1, "키 이벤트가 끊긴 지 BoardStaleMs 이하면 유지");
+            t += 1;
+            r.CheckBoard();
+            Check(releases == 2, "뗌을 놓치면 BoardStaleMs 뒤 지판 내림");
+            Check(r.Process(KeyCodes.Left, 0x25, true) && boards == 3, "그 뒤 ←를 다시 누르면 새로 보기");
+
+            // 잠금·세션 전환
+            r.CancelBoard();
+            Check(releases == 3, "세션 전환 시 지판 내림");
+            r.CancelBoard();
+            Check(releases == 3, "누르고 있지 않으면 CancelBoard는 아무 일 없음");
+        }
+
+        static void HistoryTests()
+        {
+            var h = new NoteHistory();
+            int min, max;
+            h.FretRange(out min, out max);
+            Check(min == 0 && max == Fretboard.FretColumns - 1, "기록 없으면 지판 전체 범위");
+
+            h.Add(new Pos(6, 5), true);
+            h.Add(new Pos(5, 7), true);
+            h.FretRange(out min, out max);
+            Check(min == 4 && max == 8, "누른 프렛 앞뒤 1프렛 여유로 자르기");
+
+            h.Add(new Pos(6, 5), false);
+            var snap = h.Snapshot();
+            Check(h.Count == 2 && snap.Count == 2 && snap[0].Key.Code == new Pos(6, 5).Code && !snap[0].Value, "같은 칸은 마지막 결과로 덮기");
+
+            h.Add(new Pos(2, 0), true);
+            h.Add(new Pos(2, 13), false);
+            h.FretRange(out min, out max);
+            Check(min == 0 && max == 13, "지판 끝에서는 범위를 넘지 않음");
+
+            h.Clear();
+            Check(h.Count == 0 && snap.Count == 2, "초기화해도 넘겨준 복사본은 그대로");
         }
     }
 }

@@ -153,7 +153,7 @@ namespace KeyboardGuitar
 
             var hint = new Label
             {
-                Text = "Ctrl+Enter: 연습 시작/중지\n방향키: 처음부터 다시",
+                Text = "Ctrl+Enter: 연습 시작/중지\n→: 처음부터 다시    ←: 지판 보기",
                 AutoSize = true,
                 ForeColor = SystemColors.GrayText,
                 Margin = new Padding(3, 8, 3, 0)

@@ -56,8 +56,16 @@ namespace KeyboardGuitar
             cornerBox.Location = new Point(100, reset.Bottom + 12);
             cornerBox.SelectedIndexChanged += delegate { app.SetOverlayCorner(cornerBox.SelectedIndex); };
 
-            Controls.AddRange(new Control[] { grid, help, reset, cornerLabel, cornerBox });
-            ClientSize = new Size(grid.Right + 8, cornerBox.Bottom + 10);
+            // 결과 표시 방식 (Settings.ResultMode 순서)
+            var modeLabel = new Label { Text = "결과 표시", AutoSize = true, Location = new Point(8, cornerBox.Bottom + 12) };
+            var modeBox = new ComboBox { DropDownStyle = ComboBoxStyle.DropDownList, Width = 120 };
+            modeBox.Items.AddRange(new object[] { "지판 + O/X", "O/X만" });
+            modeBox.SelectedIndex = app.Settings.ResultMode;
+            modeBox.Location = new Point(100, cornerBox.Bottom + 8);
+            modeBox.SelectedIndexChanged += delegate { app.SetResultMode(modeBox.SelectedIndex); };
+
+            Controls.AddRange(new Control[] { grid, help, reset, cornerLabel, cornerBox, modeLabel, modeBox });
+            ClientSize = new Size(grid.Right + 8, modeBox.Bottom + 10);
             Opacity = app.Settings.Opacity / 100.0;
             // 첫 포커스가 기본값 복원 버튼에 가면 Enter·Space 한 번에 매칭이 초기화되므로 드롭다운에 둔다.
             ActiveControl = cornerBox;

@@ -15,6 +15,9 @@ namespace KeyboardGuitar
         readonly NotifyIcon tray;
         readonly ToolStripMenuItem toggleItem;
         readonly OverlayForm overlay = new OverlayForm();
+        readonly NoteHistory history = new NoteHistory();
+        bool boardHeld;   // ←를 누르고 있음
+        readonly Timer boardCheck = new Timer { Interval = 1000 };
         readonly Icon idleIcon = MakeIcon(Color.Gray), activeIcon = MakeIcon(Color.FromArgb(40, 180, 90));
 
         public readonly Settings Settings;
@@ -43,9 +46,14 @@ namespace KeyboardGuitar
 
             router.ToggleRequested += Toggle;
             var h = overlay.Handle;  // BeginInvoke용 핸들을 미리 만든다
-            router.ResetRequested += delegate { if (judge != null) judge.Reset(); };
+            router.ResetRequested += ResetInput;
+            router.BoardRequested += delegate { boardHeld = true; ShowCurrentBoard(); };
+            router.BoardReleased += delegate { boardHeld = false; overlay.BeginInvoke((Action)overlay.Release); };
             router.NoteKey += OnNoteKey;
             hook = new KeyboardHook(router);
+            boardCheck.Tick += delegate { router.CheckBoard(); };
+            boardCheck.Start();
+            Microsoft.Win32.SystemEvents.SessionSwitch += OnSessionSwitch;
 
             if (Warnings.Count > 0)
                 tray.ShowBalloonTip(5000, "키보드 기타", string.Join("\n", Warnings.Take(3)), ToolTipIcon.Warning);
@@ -83,9 +91,23 @@ namespace KeyboardGuitar
                 Interval = Settings.Interval,
                 PairPattern = Settings.PairPattern
             });
+            history.Clear();
             overlay.SetOpacity(Settings.Opacity);
             overlay.Corner = Settings.OverlayCorner;
             Settings.Save(dir);
+        }
+
+        // 시작 신호(→): 판정과 지판 표시에 쌓인 음을 지운다.
+        void ResetInput()
+        {
+            if (judge != null) judge.Reset();
+            history.Clear();
+            if (boardHeld) ShowCurrentBoard();   // ←를 누른 채 →: 지운 점이 남아 보이지 않게
+        }
+
+        void OnSessionSwitch(object sender, Microsoft.Win32.SessionSwitchEventArgs e)
+        {
+            router.CancelBoard();
         }
 
         void OpenKeyMap()
@@ -119,20 +141,50 @@ namespace KeyboardGuitar
             Settings.Save(dir);
         }
 
+        // 결과 표시 방식은 판정과 무관하므로 입력을 초기화하지 않는다.
+        public void SetResultMode(int mode)
+        {
+            Settings.ResultMode = mode;
+            Settings.Normalize();
+            Settings.Save(dir);
+        }
+
         void OnNoteKey(int id)
         {
             Pos p;
             if (judge == null || !Settings.Keys.TryGetPos(id, out p)) return;
             bool ok = judge.Feed(p);
+            history.Add(p, ok);
             // 훅 콜백을 빨리 끝내기 위해 화면 갱신은 나중에
-            overlay.BeginInvoke((Action)(() => overlay.ShowResult(ok)));
+            // ←를 누르고 있으면 O/X만 모드여도 지판을 계속 갱신한다.
+            if (Settings.ResultMode == 0 || boardHeld) ShowBoard(ok);
+            else overlay.BeginInvoke((Action)(() => overlay.ShowResult(ok)));
+        }
+
+        // ← 누르는 동안: 결과 표시 방식과 상관없이 지금까지 누른 음의 지판을 계속 보여준다. 아직 누른 음이 없으면 O/X 없이 빈 지판.
+        void ShowCurrentBoard()
+        {
+            bool? ok = null;
+            if (history.Count > 0 && judge != null) ok = !judge.Failed;
+            List<KeyValuePair<Pos, bool>> notes = history.Snapshot();
+            int min, max;
+            history.FretRange(out min, out max);
+            overlay.BeginInvoke((Action)(() => overlay.Hold(notes, min, max, ok)));
+        }
+
+        void ShowBoard(bool? ok)
+        {
+            List<KeyValuePair<Pos, bool>> notes = history.Snapshot();
+            int min, max;
+            history.FretRange(out min, out max);
+            overlay.BeginInvoke((Action)(() => overlay.ShowBoard(notes, min, max, ok)));
         }
 
         // 훅 콜백에서도 불린다. 상태는 바로 바꾸고 화면 갱신은 나중에 한다.
         void Toggle()
         {
             router.Active = !router.Active;
-            if (judge != null) judge.Reset();
+            ResetInput();
             bool active = router.Active;
             overlay.BeginInvoke((Action)(() =>
             {
@@ -178,6 +230,8 @@ namespace KeyboardGuitar
 
         protected override void ExitThreadCore()
         {
+            Microsoft.Win32.SystemEvents.SessionSwitch -= OnSessionSwitch;
+            boardCheck.Dispose();
             hook.Dispose();
             tray.Visible = false;
             tray.Dispose();

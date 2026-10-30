@@ -75,7 +75,7 @@ namespace KeyboardGuitar
             return id == Up || id == Down || id == Left || id == Right;
         }
 
-        // 키 매칭 창에서 할당하지 않는 키: 시작 신호(방향키), 활성화 키(Ctrl), OS 키(Alt, Win)
+        // 키 매칭 창에서 할당하지 않는 키: 시작 신호(→)·지판 보기(←) 등 방향키, 활성화 키(Ctrl), OS 키(Alt, Win)
         public static bool IsUnassignable(int id)
         {
             return IsArrow(id) || id == LCtrl || id == RCtrl || id == LAlt || id == RAlt || id == LWin || id == RWin;
