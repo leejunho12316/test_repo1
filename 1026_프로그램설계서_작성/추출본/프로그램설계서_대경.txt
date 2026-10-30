@@ -1,0 +1,231 @@
+(주)대경
+[TABLE]
+|
+제조AI특화 스마트공장 보급·확산사업
+프로그램설계서
+2026. 10. 26
+시너지시스템즈(주)
+|
+목 차
+1) AI-TD4-001 (품질검사 데이터 조회)	4
+2) AI-TD4-002 (품질검사 전처리 데이터 조회)	5
+3) AI-TD4-005 (품질검사 AI 모델링)	6
+4) AI-TD4-006 (품질검사 AI 모델 검증)	7
+5) AI-TD4-009 (대시보드)	8
+6) AI-TD4-010 (AI 기반 품질검사 합불 판정)	9
+7) AI-TD4-011 (AI 기반 품질검사 내역조회)	10
+[TABLE]
+|
+프로그램 ID
+|
+AI-TD4-001
+|
+프로그램명
+|
+품질검사 데이터 조회
+|
+프로그램 설명
+|
+각 라인의 비전 카메라에서 촬영된 이미지 원천 데이터를 조회한다.
+|
+모듈 흐름도
+|
+사용 DB : AI_INSPECTION
+조회 조건 : PICTURE_TIME, LINE_NUMBER, DEFECT_YN
+정렬 조건 : PICTURE_TIME DESC, DEFECT_YN DESC, LINE_NUMBER ASC
+|
+프로그램   기능 설명
+|
+1. 조회 일자의 시작일과 종료일, 라인 번호, 불량 여부를 입력한다. 기본 조회 기간은 오늘을 포함한 최근 7일이며, 라인 번호와 불량 여부의 기본값은 전체이다.
+2. AI_INSPECTION 테이블에서 조회 기간과 라인 번호, 불량 여부에 맞춰 촬영일시 최신순, 불량 여부, 라인 번호순으로 품질검사 원천 데이터를 조회한다.
+3. 이미지, 촬영 일자, 촬영 라인, 불량 여부를 페이지당 21건씩 표시하며, 정상은 초록색, 불량은 빨간색 테두리로 표시한다. 이미지를 누르면 확대해 보여준다.
+|
+관련 테이블
+|
+AI_INSPECTION
+[TABLE]
+|
+프로그램 ID
+|
+AI-TD4-002
+|
+프로그램명
+|
+품질검사 전처리 데이터 조회
+|
+프로그램 설명
+|
+비전 카메라 이미지를 기반으로 한 AI 학습용 전처리 데이터를 조회한다.
+|
+모듈 흐름도
+|
+사용 DB : AI_INSPECTION_PP, AI_INSPECTION
+조회 조건 : AI_INSPECTION.PICTURE_TIME, AI_INSPECTION.LINE_NUMBER, AI_INSPECTION_PP.DEFECT_YN, AI_INSPECTION_PP.DEFECT_TYPE
+정렬 조건 : AI_INSPECTION.PICTURE_TIME DESC
+|
+프로그램   기능 설명
+|
+1. 조회 일자의 시작일과 종료일, 라인 번호, 불량 여부, 불량 유형을 입력한다. 기본 조회 기간은 오늘을 포함한 최근 7일이며, 나머지 조건의 기본값은 전체이다.
+2. AI_INSPECTION_PP 테이블과 AI_INSPECTION 테이블을 원천 데이터ID로 연결해 조회 조건에 맞는 전처리 데이터를 촬영일시 최신순으로 조회한다.
+3. id, 전처리 이미지, 촬영일시, 불량 여부, 불량 유형, yolo_txt를 페이지당 6건씩 표시한다. 불량 여부는 불량이면 True, 정상이면 False로 표시하고, 정상이면 불량 유형과 yolo_txt는 '-'로 표시한다. 전처리 이미지를 누르면 확대해 보여준다.
+|
+관련 테이블
+|
+AI_INSPECTION_PP, AI_INSPECTION
+[TABLE]
+|
+프로그램 ID
+|
+AI-TD4-005
+|
+프로그램명
+|
+품질검사 AI 모델링
+|
+프로그램 설명
+|
+전처리 데이터와 품질검사 AI 모델 학습 정보를 함께 조회한다.
+|
+모듈 흐름도
+|
+사용 DB : AI_INSPECTION_PP, AI_INSPECTION_MODEL_TRAIN
+조회 조건 : PP_TIME(최신 완료월 한 달), TRAIN_DATETIME
+정렬 조건 : PP_TIME DESC, TRAIN_DATETIME DESC
+|
+프로그램   기능 설명
+|
+1. 학습 정보의 조회 시작일과 종료일을 입력한다. 기본 조회 기간은 전월 동일일부터 오늘까지이며, 전월에 동일 일자가 없으면 전월 말일을 시작일로 한다.
+2. AI_INSPECTION_PP 테이블에서 조회 조건과 관계없이 최신 완료월 한 달의 전처리 데이터를 조회해 전처리 이미지, 불량 여부, 불량 유형을 페이지당 8건씩 표시한다.
+3. AI_INSPECTION_MODEL_TRAIN 테이블에서 조회 기간에 맞춰 학습일시 최신순으로 모델명, 학습일시, 학습시간, 알고리즘, mAP50, 비고를 페이지당 8건씩 조회한다.
+|
+관련 테이블
+|
+AI_INSPECTION_PP, AI_INSPECTION_MODEL_TRAIN
+[TABLE]
+|
+프로그램 ID
+|
+AI-TD4-006
+|
+프로그램명
+|
+품질검사 AI 모델 검증
+|
+프로그램 설명
+|
+품질검사 AI 모델별 학습 정보와 검증 결과를 조회한다.
+|
+모듈 흐름도
+|
+사용 DB : AI_INSPECTION_MODEL_TRAIN
+조회 조건 : TRAIN_DATETIME
+정렬 조건 : TRAIN_DATETIME DESC
+|
+프로그램   기능 설명
+|
+1. 학습 정보의 조회 시작일과 종료일을 입력한다. 기본 조회 기간은 전월 동일일부터 오늘까지이며, 전월에 동일 일자가 없으면 전월 말일을 시작일로 한다.
+2. AI_INSPECTION_MODEL_TRAIN 테이블에서 조회 기간에 맞춰 학습일시 최신순으로 모델명, 학습일시, 학습시간, 산출 정확도, 손실 값, 검증 손실값, 비고를 페이지당 12건씩 조회한다.
+3. 산출 정확도는 %로 표시하고, 손실 값과 검증 손실값은 % 없이 소수 4자리로 표시한다. NULL은 '-', 실제 0은 '0.0000'으로 구분한다.
+4. 비고에는 손실함수명, 스케일링, 검증기간, 저장 에포크를 기록한다.
+|
+관련 테이블
+|
+AI_INSPECTION_MODEL_TRAIN
+[TABLE]
+|
+프로그램 ID
+|
+AI-TD4-009
+|
+프로그램명
+|
+대시보드
+|
+프로그램 설명
+|
+완제품 불량률과 시간당 생산량의 월별 추이를 표시한다.
+|
+모듈 흐름도
+|
+사용 DB : DASHBOARD_MONTHLY_DEFECT_RATE, DASHBOARD_PROD_MONTHLY
+조회 조건 : STAT_MONTH
+정렬 조건 : STAT_MONTH ASC
+|
+프로그램   기능 설명
+|
+1. 조회 기간은 현재 월을 제외한 직전 12개월로 설정한다.
+2. DASHBOARD_MONTHLY_DEFECT_RATE 테이블에서 조회 기간의 전체 검사 수(총생산량), 불량 수, 불량율을 월별로 집계해, 전체 검사 수와 불량 수는 첫 번째 축의 겹친 막대로, 불량율은 두 번째 축의 선으로 혼합 그래프를 출력한다.
+3. DASHBOARD_PROD_MONTHLY 테이블에서 조회 기간의 시간당 평균 생산량을 월별로 집계해 선 그래프로 출력한다.
+4. 월별 불량율 그래프와 월 평균 시간당 생산량 그래프를 15초 간격으로 번갈아 출력한다.
+|
+관련 테이블
+|
+DASHBOARD_MONTHLY_DEFECT_RATE, DASHBOARD_PROD_MONTHLY
+[TABLE]
+|
+프로그램 ID
+|
+AI-TD4-010
+|
+프로그램명
+|
+AI 기반 품질검사 합불 판정
+|
+프로그램 설명
+|
+촬영 이미지를 품질검사 AI로 판정한 결과를 모니터링한다.
+|
+모듈 흐름도
+|
+사용 DB : AI_INSPECTION_RES, AI_INSPECTION_PP, AI_INSPECTION
+조회 조건 : AI_INSPECTION.PICTURE_TIME, AI_INSPECTION.LINE_NUMBER, AI_INSPECTION_RES.DEFECT_YN, AI_INSPECTION_RES.DEFECT_TYPE
+정렬 조건 : AI_INSPECTION.LINE_NUMBER ASC, AI_INSPECTION.PICTURE_TIME DESC
+|
+프로그램   기능 설명
+|
+1. 조회 일자, 라인 번호, 불량 여부, 불량 유형을 선택한다. 조회 일자의 기본값은 오늘이며, 나머지 조건의 기본값은 전체이다.
+2. AI_INSPECTION_RES 테이블을 전처리ID로 AI_INSPECTION_PP 테이블과, 원천 데이터ID로 AI_INSPECTION 테이블과 연결해 조회 조건에 맞는 판정 결과를 조회한다.
+3. 이미지 목록을 페이지당 7건씩 표시하며, 정상은 초록색, 불량은 빨간색 테두리로 표시한다.
+4. 이미지를 선택하면 선택 표시와 함께 촬영일시, 라인 번호, 합격/불합격, 불량 유형과 선택한 이미지를 표시한다.
+|
+관련 테이블
+|
+AI_INSPECTION_RES, AI_INSPECTION_PP, AI_INSPECTION
+[TABLE]
+|
+프로그램 ID
+|
+AI-TD4-011
+|
+프로그램명
+|
+AI 기반 품질검사 내역조회
+|
+프로그램 설명
+|
+품질검사 AI 판정 내역을 라인 번호, 불량 여부, 불량 유형별로 조회한다.
+|
+모듈 흐름도
+|
+사용 DB : AI_INSPECTION_RES, AI_INSPECTION_PP, AI_INSPECTION
+조회 조건 : AI_INSPECTION_RES.PRED_DATETIME, AI_INSPECTION.LINE_NUMBER, AI_INSPECTION_RES.DEFECT_YN, AI_INSPECTION_RES.DEFECT_TYPE
+정렬 조건 : AI_INSPECTION_RES.PRED_DATETIME DESC, AI_INSPECTION.LINE_NUMBER ASC
+|
+프로그램   기능 설명
+|
+1. 조회 기간의 시작일과 종료일, 라인 번호, 불량 여부, 불량 유형을 선택한다. 라인 번호, 불량 여부, 불량 유형의 기본값은 전체이다.
+2. AI_INSPECTION_RES 테이블에서 조회 조건에 맞는 판정 내역을 판별일시 최신순, 라인 번호순으로 조회한다. 라인 번호는 전처리ID와 원천 데이터ID로 AI_INSPECTION_PP, AI_INSPECTION 테이블과 연결해 가져온다.
+3. 예측 일시, 라인 번호, 불량 여부(정상/불량), 불량 유형을 페이지당 12건씩 표시한다.
+|
+관련 테이블
+|
+AI_INSPECTION_RES, AI_INSPECTION_PP, AI_INSPECTION
+※ 작성 방법
+- 전체 프로그램 목록과 본 사업에서 추가 및 변경되는 기능(모듈)단위로 소스코드를 구현하기 위한 세부 구성 내용을 작성한다(인터페이스 설계 포함)
+- 목차는 전체 프로그램ID를 기술함
+- 프로그램 ID 항목은 시스템명 뒤에 TD4과 일련번호를 부여함(예시 : MES-TD4-001)
+- 프로그램명 항목은 프로그램을 식별하기 위한 명칭을 사용하며, 중복된 명칭은 사용하지 않음
+- 프로그램 설명은 구현할 기능에 대해 간단한 설명을 기술함
+- 모듈 흐름도 항목은 모듈(컴포넌트) 및 테이블간 연결관계와 주요 데이터 흐름을 기술함
+- 프로그램 기능 설명 항목은 프로그램 기능 및 모듈(컴포넌트) 기능 등을 기술함
+- 관련 테이블 항목은 프로그램에서 사용되는 테이블명을 기술함
